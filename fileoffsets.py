@@ -1,6 +1,8 @@
 import glob
 from pathlib import Path
 
+from src.mlvl import Mlvl
+
 
 class BitFileField:
     def __init__(self, name, offset, bits):
@@ -28,8 +30,8 @@ class BitFile:
         self.len = 0
 
     def add(self, name, bytes):
-        bits = bytes * 8≠
-        offset = self.len + bits
+        bits = bytes * 8
+        offset = self.len
         self.len += bits
         bitfile = BitFileField(name, offset, bits)
         self.fields.append(bitfile)
@@ -49,23 +51,12 @@ class BitFile:
             print(f"{offset.offsetStr()} - {offset.name}")
 
 
-class Mlvl:
-    def __init__(self, id):
-        self.id = id
-        self.cines = []
-        self.scans = []
-        self.relays = []
-        self.doors = []
-        self.areas = []
-        self.layerCount = 0
-
-
 def getMlvls(folder):
     mlvls = []
 
     mlvlFiles = glob.glob(f"{folder}/*.MLVL")
     for mlvlFile in mlvlFiles:
-        mlvl = Mlvl(Path(mlvlFile).stem)
+        mlvl = Mlvl(mlvlFile)
         mlvls.append(mlvl)
 
     mlvls.sort(key=lambda x: x.id)
@@ -77,6 +68,8 @@ def getHints(folder):
 
 
 def generatePrimeDataFile(name, folder):
+    mlvls = getMlvls(folder)
+
     f = BitFile(name)
     # File Header
     f.add("crc", 4)
@@ -102,7 +95,7 @@ def generatePrimeDataFile(name, folder):
     f.addb("fusionBeat", 1)
     f.addb("allItems", 1)
     f.addb("automapperState", 2)
-    for mlvl in getMlvls(folder):
+    for mlvl in mlvls:
         for cineNum, cine in enumerate(mlvl.cines):
             f.addb(f"mlvl[{mlvl.id}].cine[{cineNum}].watched", 1)
             # f.addb(f"mlvl[{mlvl.id}].cine[{cine.name}].watched", 1)
@@ -161,7 +154,7 @@ def generatePrimeDataFile(name, folder):
         f.addb(f"saveSlot[{saveSlot}].spiritAmt/cap", 2)
         f.addb(f"saveSlot[{saveSlot}].newbornAmt/cap", 2)
 
-        for mlvl in getMlvls(folder):
+        for mlvl in mlvls:
             for scanNum, scan in enumerate(mlvl.scans):
                 f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].scan[{scanNum}].watched", 1)
                 # f.addb(f"mlvl[{mlvl.id}].scan[{scan.name}].watched", 1)
@@ -194,23 +187,23 @@ def generatePrimeDataFile(name, folder):
             # f.add(f"saveSlot[{saveSlot}].hints[{hint.name}].remainingTime", 4)
 
         # World State
-        for mlvl in getMlvls(folder):
+        for mlvl in mlvls:
             f.add(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].currentAreaID", 4)
             f.add(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].initialMREAAssetID", 4)
             # Relay Tracker
             for relayNum, relay in enumerate(mlvl.relays):
-                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].scan[{relayNum}].active", 1)
+                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].relay[{relayNum}].active", 1)
                 # f.addb(f"mlvl[{mlvl.id}].scan[{relay.name}].watched", 1)
 
             # Map world info
             for areaNum, area in enumerate(mlvl.areas):
-                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].scan[{areaNum}].visited", 1)
+                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].area[{areaNum}].visited", 1)
                 # f.addb(f"mlvl[{mlvl.id}].scan[{area.name}].watched", 1)
             for areaNum, area in enumerate(mlvl.areas):
-                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].scan[{areaNum}].mapped", 1)
+                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].area[{areaNum}].mapped", 1)
                 # f.addb(f"mlvl[{mlvl.id}].scan[{area.name}].watched", 1)
             for doorNum, door in enumerate(mlvl.doors):
-                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].scan[{doorNum}].opened", 1)
+                f.addb(f"saveSlot[{saveSlot}].mlvl[{mlvl.id}].door[{doorNum}].opened", 1)
                 # f.addb(f"mlvl[{mlvl.id}].scan[{door.name}].watched", 1)
 
             # Layer state
