@@ -208,6 +208,6 @@ def generatePrimeDataFile(name, folder):
 
             # Layer state
             f.addb(f"saveSlot[{saveSlot}].layerCount", 10)
-            for i in range(0, mlvl.layerCount):
-                f.addb(f"saveSlot[{saveSlot}].layerActive", 1)
+            for layerNum, layer in enumerate(mlvl.layers):
+                f.addb(f"saveSlot[{saveSlot}].layer[{layerNum}|{layer.area.mrea}.MREA-{layer.name}].layerActive", 1)
     return f

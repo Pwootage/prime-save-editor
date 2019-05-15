@@ -103,6 +103,7 @@ class Mlvl:
             layerCount = f.readu32()
             layerFlags = f.readu64()
             self.areas[areaID].layerCount = layerCount
+            self.layerCount += layerCount
             for i in range(0, layerCount):
                 active = ((layerFlags >> i) & 1) != 0
                 self.layers.append(Layer(active=active))
@@ -116,8 +117,8 @@ class Mlvl:
         for areaID in range(0, areaCount):
             offset = f.readu32()
             for layerNum in range(0, self.areas[areaID].layerCount):
-                self.layers[cLayerCount].__dict__['name'] = layerNames[offset]
-                self.layers[cLayerCount].__dict__['area'] = area
+                self.layers[cLayerCount].__dict__['name'] = layerNames[offset + layerNum]
+                self.layers[cLayerCount].__dict__['area'] = self.areas[areaID]
                 cLayerCount += 1
 
         f.close()
